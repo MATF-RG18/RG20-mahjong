@@ -13,6 +13,7 @@ typedef struct{
 
 void initialise();
 void ispisi();
+static void on_click(int button, int state,int x, int y);
 static void on_keyboard(unsigned char key, int x, int y);
 static void on_reshape(int width, int height);
 static void on_timer(int value);
@@ -35,6 +36,7 @@ int main(int argc, char **argv)
     initialise();
     glutKeyboardFunc(on_keyboard);
     glutReshapeFunc(on_reshape);
+    glutMouseFunc(on_click);
     glutDisplayFunc(on_display);
 
     glClearColor(0, 0, 0, 0);
@@ -120,6 +122,14 @@ static void on_keyboard(unsigned char key, int x, int y)
 
     }
 }
+
+static void on_click(int button, int state,int x, int y){
+	if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN){
+		printf("Kliknuto na %i %i\n",x,y);
+	}
+}
+
+
 
 static void on_timer(int value)
 {
