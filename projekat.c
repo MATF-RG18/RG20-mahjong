@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <GL/glut.h>
+
 #define numOfTiles 72
 
 typedef struct{
@@ -12,7 +13,8 @@ typedef struct{
 
 
 void initialise();
-void ispisi();
+
+
 static void on_click(int button, int state,int x, int y);
 static void on_keyboard(unsigned char key, int x, int y);
 static void on_reshape(int width, int height);
@@ -24,7 +26,7 @@ int main(int argc, char **argv)
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 
-    glutInitWindowSize(600, 600);
+    glutInitWindowSize(1200, 1000);
     glutInitWindowPosition(100, 100);
     glutCreateWindow(argv[0]);
 
@@ -41,7 +43,7 @@ int main(int argc, char **argv)
 
     glClearColor(0, 0, 0, 0);
     glEnable(GL_DEPTH_TEST);
-    
+     glEnable(GL_NORMALIZE);
   
     glutMainLoop();
 
@@ -109,8 +111,10 @@ void initialise(){
 			tiles[i].b=0;          
 		}
 	
-	}
-
+	
+            
+        }
+       
 }
 
 static void on_keyboard(unsigned char key, int x, int y)
@@ -124,8 +128,31 @@ static void on_keyboard(unsigned char key, int x, int y)
 }
 
 static void on_click(int button, int state,int x, int y){
-	if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN){
-		printf("Kliknuto na %i %i\n",x,y);
+	if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN && x>480 && x<800 && y>30 && y<680){
+            int i,j;
+            i=(y-30)/81;
+            j=(int)(x-480)/(39);
+            
+            printf("Kliknuto na %i %i\n",x,y);
+            if(i==0){
+                printf("kliknuto na %i\n",71-j);
+            }
+            else if(i==1){
+                printf("kliknuto na %i\n",44-j);
+            }
+            else if(i==6){
+                printf("kliknuto na %i\n",14-j);
+            }
+            
+            else if(i==7){
+                printf("kliknuto na %i\n",7-j);
+            }
+            else if(j==1){
+                printf("kliknuto na %i\n",37-(i-2)*6);
+            }
+            else if(j==6){
+                printf("kliknuto na %i\n",32-(i-2)*6);
+            }
 	}
 }
 
@@ -146,19 +173,54 @@ static void on_reshape(int width, int height)
 
 static void on_display(void)
 {
+     GLfloat light_ambient[] = { 0.6, 0.6, 0.6, 1 };
+    GLfloat light_diffuse[] = { 0.7, 0.7, 0.7, 1 };
+    GLfloat light_specular[] = { 0.6, 0.6, 0.6, 1 };
+
+    GLfloat ambient_coeffs[] = { 0.4, 0.4, 0.4, 1 };
+    GLfloat diffuse_coeffs[] = { 0, 0, 0, 1 };
+    GLfloat specular_coeffs[] = { 0.3, 0.3, 0.3, 1 };
+    GLfloat shininess = 20;
+    
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+   
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+
+	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs);
+      
+      glMaterialfv(GL_FRONT, GL_SPECULAR, specular_coeffs);
+      glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+
+    
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
+	GLfloat light_position[] = {5,15,6, 1 };
+	 glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     gluLookAt(5,15,6, 5, 2.5, 7, 0, 0,1);
+    
+    
+    
     int i;
     for(i=0;i<numOfTiles;i++){
         if(tiles[i].unmatched){
         	glPushMatrix();
-
             	glScalef(1,0.3,2);
             	glTranslatef(tiles[i].x,tiles[i].y,tiles[i].z);
-            	glColor3f(tiles[i].r,tiles[i].g,tiles[i].b);
-            	glutSolidCube(1);
+            	/*glColor3f(tiles[i].r,tiles[i].g,tiles[i].b);
+                glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs);
+                glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
+                glMaterialfv(GL_FRONT, GL_SPECULAR, specular_coeffs);
+                glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+*/            	
+                diffuse_coeffs[1] = 1;
+		
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
+                glutSolidCube(1);
 
         	glPopMatrix();
         }
