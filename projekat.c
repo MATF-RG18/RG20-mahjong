@@ -153,6 +153,62 @@ static void on_click(int button, int state,int x, int y){
             else if(j==6){
                 printf("kliknuto na %i\n",32-(i-2)*6);
             }
+            else if(i==2){
+            	int pom = 61-j;
+            	if (tiles[pom].unmatched)
+                	printf("kliknuto na %i\n",pom);
+                else
+                	printf("kliknuto na %i\n",pom-23);
+            }
+
+            else if(i==5){
+            	int pom = 47-j;
+            	if (tiles[pom].unmatched)
+                	printf("kliknuto na %i\n",pom);
+                else
+                	printf("kliknuto na %i\n",pom-29);
+            }
+
+            else if(j==2){
+            	int pom = 55-4*(i-3);
+            	if (tiles[pom].unmatched)
+                	printf("kliknuto na %i\n",pom);
+                else
+                	printf("kliknuto na %i\n",pom-25-3*(i-3));
+            }
+
+            else if(j==5){
+            	int pom = 52-4*(i-3);
+            	if (tiles[pom].unmatched)
+                	printf("kliknuto na %i\n",pom);
+                else
+                	printf("kliknuto na %i\n",pom-25-2*(i-3));
+            }
+
+            else if(i==3){
+            	int pom = 63-(j-3);
+            	if (tiles[pom].unmatched)
+                	printf("kliknuto na %i\n",pom);
+                else{
+                	pom = pom -9;
+                	if (tiles[pom].unmatched)
+                		printf("kliknuto na %i\n",pom);
+                	else
+                		printf("kliknuto na %i\n",pom-25);
+                }
+            }
+            else{
+            	int pom = 61-(j-3);
+            	if (tiles[pom].unmatched)
+                	printf("kliknuto na %i\n",pom);
+                else{
+                	pom = pom -11;
+                	if (tiles[pom].unmatched)
+                		printf("kliknuto na %i\n",pom);
+                	else
+                		printf("kliknuto na %i\n",pom-27);
+                }
+            }
 	}
 }
 
