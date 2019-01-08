@@ -16,8 +16,13 @@ typedef struct{
 int* values;
 int* indices;
 void initialise();
-void shuffle(int *array, size_t n);
+void shuffle(int *array, int n);
 int check_availability(int index);
+void printFaces();
+void printArray(int * array,int n){
+	for(int i=0;i<n;i++)
+		printf("%d \n",array[i] );
+}
 
 
 static void on_click(int button, int state,int x, int y);
@@ -64,6 +69,7 @@ int main(int argc, char **argv)
  	}
 
     initialise();
+    printFaces();
     glutKeyboardFunc(on_keyboard);
     glutReshapeFunc(on_reshape);
     glutMouseFunc(on_click);
@@ -76,6 +82,13 @@ int main(int argc, char **argv)
     glutMainLoop();
 
     return 0;
+}
+
+void printFaces(){
+
+	for(int i=0;i<numOfTiles;i++){
+		printf("%d: %d\n",i,tiles[i].face );
+	}
 }
 
 void shuffle(int *array, int n){
@@ -107,8 +120,8 @@ void initialise(){
 	shuffle(indices,numOfTiles);
 	int sum=0;
 	for(i=0;i<NUM_OF_FACES;i++){
-		for(j=0;j<values[i];i++){
-			tiles[indices[sum+j]]=i;
+		for(j=0;j<values[i];j++){
+			tiles[indices[sum+j]].face=i;
 		}
 		sum+=values[i];
 	}
@@ -179,43 +192,45 @@ static void on_keyboard(unsigned char key, int x, int y)
 }
 
 static void on_click(int button, int state,int x, int y){
-	if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN && x>480 && x<800 && y>30 && y<680){
+	if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN && x>480 && x<820 && y>30 && y<680){
             int i,j;
             i=(y-30)/81;
-            j=(int)(x-480)/(39);
+            j=(int)(x-480)/(41);
             int pom;
-            printf("Kliknuto na %i %i\n",x,y);
+            if (i<0  || j<0 || i>7 || j>7)
+            	return;
+            //printf("Kliknuto na %i %i\n",x,y);
             if(i==0){
-                printf("kliknuto na %i\n",71-j);
+              //  printf("kliknuto na %i\n",71-j);
                 pom=71-j;
             }
             else if(i==1){
-                printf("kliknuto na %i\n",44-j);
+               // printf("kliknuto na %i\n",44-j);
             	pom=44-j;
             }
             else if(i==6){
-                printf("kliknuto na %i\n",14-j);
+              //  printf("kliknuto na %i\n",14-j);
                 pom=14-j;
             }
             
             else if(i==7){
-                printf("kliknuto na %i\n",7-j);
+               // printf("kliknuto na %i\n",7-j);
                 pom=7-j;
             }
             else if(j==1){
-                printf("kliknuto na %i\n",37-(i-2)*6);
+              //  printf("kliknuto na %i\n",37-(i-2)*6);
                 pom=37-(i-2)*6;
             }
             else if(j==6){
-                printf("kliknuto na %i\n",32-(i-2)*6);
-                pom=32-(i-2)*6
+               // printf("kliknuto na %i\n",32-(i-2)*6);
+                pom=32-(i-2)*6;
             }
             else if(i==2){
             	pom = 61-j;
             	if (tiles[pom].unmatched)
                 	printf("kliknuto na %i\n",pom);
                 else{
-                	printf("kliknuto na %i\n",pom-23);
+                //	printf("kliknuto na %i\n",pom-23);
                 	pom=pom-23;
                 }
             }
@@ -225,7 +240,7 @@ static void on_click(int button, int state,int x, int y){
             	if (tiles[pom].unmatched)
                 	printf("kliknuto na %i\n",pom);
                 else{
-                	printf("kliknuto na %i\n",pom-29);
+               // 	printf("kliknuto na %i\n",pom-29);
                 	pom=pom-29;
                 }
             }
@@ -235,7 +250,7 @@ static void on_click(int button, int state,int x, int y){
             	if (tiles[pom].unmatched)
                 	printf("kliknuto na %i\n",pom);
                 else{
-                	printf("kliknuto na %i\n",pom-25-3*(i-3));
+                //	printf("kliknuto na %i\n",pom-25-3*(i-3));
                 	pom=pom-25-3*(i-3);
                 }
             }
@@ -245,7 +260,7 @@ static void on_click(int button, int state,int x, int y){
             	if (tiles[pom].unmatched)
                 	printf("kliknuto na %i\n",pom);
                 else{
-                	printf("kliknuto na %i\n",pom-25-2*(i-3));
+                //	printf("kliknuto na %i\n",pom-25-2*(i-3));
                 	pom=pom-25-2*(i-3);
                 }
             }
@@ -260,11 +275,12 @@ static void on_click(int button, int state,int x, int y){
                 		printf("kliknuto na %i\n",pom);
                 	else{
                 		pom=pom-25-2*(i-3);
-                		printf("kliknuto na %i\n",pom-25-2*(i-3));
+                	//	printf("kliknuto na %i\n",pom-25-2*(i-3));
                 	}
                 }
             }
             if(check_availability(pom)){
+            	printf("dostupno %d\n",pom);
 
             	if(selected){
             		if(pom==indexOfSelected){
@@ -336,6 +352,13 @@ static void on_display(void)
     
     
 
+    if(selected){
+    	glPushMatrix();
+    		glScalef(1,0.3,2);
+    		glTranslatef(tiles[indexOfSelected].x,tiles[indexOfSelected].y+0.1,tiles[indexOfSelected].z);
+    		glutWireCube(1);
+    	glPopMatrix();
+    }
 
     int i;
     for(i=0;i<numOfTiles;i++){
@@ -362,15 +385,11 @@ static void on_display(void)
 
 
 int check_availability(int index){
-	if(index>54 && index<64)
+	if(index>59 && index<64)
 		return 1;
-	if(index>36 && index<49)
+	if(index>43 && index<60 && ((index-44)%4==0 || (index-44)%4==3))
 		return 1;
-	if(index==51 || index==52)
-		return 1;
-	if(index>7 && index<15)
-		return 1;
-	if(index>18 && index<33 && ((index-19)%6==0 || (index-19)%6==1))
+	if(index>7 && index<44 && ((index-8)%6==0 || (index-8)%6==5))
 		return 1;
 	if(index==0 || index==7 || index==71 || index==64)
 		return 1;
