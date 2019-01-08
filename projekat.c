@@ -4,15 +4,19 @@
 #include <GL/glut.h>
 
 #define numOfTiles 72
-
+#define NUM_OF_FACES 14
 typedef struct{
 	float x,y,z;
 	int visible,unmatched;
 	float r,g,b;
+	int face;
 }Tile;
 
 
+int* values;
+int* indices;
 void initialise();
+void shuffle(int *array, size_t n);
 
 
 static void on_click(int button, int state,int x, int y);
@@ -20,7 +24,17 @@ static void on_keyboard(unsigned char key, int x, int y);
 static void on_reshape(int width, int height);
 static void on_timer(int value);
 static void on_display(void);
+
 Tile* tiles;
+
+int selected=0;
+int indexOfSelected=0;
+
+/******************************* 
+		OSLOBODI MEMORIJU
+
+*******************************/
+
 int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
@@ -35,6 +49,18 @@ int main(int argc, char **argv)
     	fprintf(stderr,"Tile array allocation failure");
     	exit(EXIT_FAILURE);
     }
+    values=malloc(NUM_OF_FACES*sizeof(int));
+    if(NULL==values){
+       	fprintf(stderr,"Value array allocation failure");
+    	exit(EXIT_FAILURE);
+ 	}
+
+    indices=malloc(numOfTiles*sizeof(int));
+    if(NULL==indices){
+       	fprintf(stderr,"Index array allocation failure");
+    	exit(EXIT_FAILURE);
+ 	}
+
     initialise();
     glutKeyboardFunc(on_keyboard);
     glutReshapeFunc(on_reshape);
@@ -43,17 +69,51 @@ int main(int argc, char **argv)
 
     glClearColor(0, 0, 0, 0);
     glEnable(GL_DEPTH_TEST);
-     glEnable(GL_NORMALIZE);
+    glEnable(GL_NORMALIZE);
   
     glutMainLoop();
 
     return 0;
 }
 
-
+void shuffle(int *array, int n){
+    if (n > 1) {
+        int i;
+        for (i=0;i<n-1; i++){
+          int j = i + rand()/(RAND_MAX/(n-i)+1);
+          int t = array[j];
+          array[j] = array[i];
+          array[i] = t;
+        }
+    }
+}
 
 void initialise(){
-	int i;
+	int i,j;
+	for(i=0;i<NUM_OF_FACES;i++){
+		if(i<7)
+			values[i]=4;
+		else if (i<13)
+			values[i]=6;
+		else
+			values[i]=8;
+	}
+	for(i=0;i<numOfTiles;i++)
+		indices[i]=i;
+
+	shuffle(values,NUM_OF_FACES);
+	shuffle(indices,numOfTiles);
+	int sum=0;
+	for(i=0;i<NUM_OF_FACES;i++){
+		for(j=0;j<values[i];i++){
+			tiles[indices[sum+j]]=i;
+		}
+		sum+=values[i];
+	}
+
+	free(values);
+	free(indices);	
+
 	for(i=0;i<numOfTiles;i++){
 		tiles[i].unmatched=1;
 		if(i<8){
@@ -132,83 +192,103 @@ static void on_click(int button, int state,int x, int y){
             int i,j;
             i=(y-30)/81;
             j=(int)(x-480)/(39);
-            
+            int pom;
             printf("Kliknuto na %i %i\n",x,y);
             if(i==0){
                 printf("kliknuto na %i\n",71-j);
+                pom=71-j;
             }
             else if(i==1){
                 printf("kliknuto na %i\n",44-j);
+            	pom=44-j;
             }
             else if(i==6){
                 printf("kliknuto na %i\n",14-j);
+                pom=14-j;
             }
             
             else if(i==7){
                 printf("kliknuto na %i\n",7-j);
+                pom=7-j;
             }
             else if(j==1){
                 printf("kliknuto na %i\n",37-(i-2)*6);
+                pom=37-(i-2)*6;
             }
             else if(j==6){
                 printf("kliknuto na %i\n",32-(i-2)*6);
+                pom=32-(i-2)*6
             }
             else if(i==2){
-            	int pom = 61-j;
+            	pom = 61-j;
             	if (tiles[pom].unmatched)
                 	printf("kliknuto na %i\n",pom);
-                else
+                else{
                 	printf("kliknuto na %i\n",pom-23);
+                	pom=pom-23;
+                }
             }
 
             else if(i==5){
-            	int pom = 47-j;
+            	pom = 47-j;
             	if (tiles[pom].unmatched)
                 	printf("kliknuto na %i\n",pom);
-                else
+                else{
                 	printf("kliknuto na %i\n",pom-29);
+                	pom=pom-29;
+                }
             }
 
             else if(j==2){
-            	int pom = 55-4*(i-3);
+            	pom = 55-4*(i-3);
             	if (tiles[pom].unmatched)
                 	printf("kliknuto na %i\n",pom);
-                else
+                else{
                 	printf("kliknuto na %i\n",pom-25-3*(i-3));
+                	pom=pom-25-3*(i-3);
+                }
             }
 
             else if(j==5){
-            	int pom = 52-4*(i-3);
+            	pom = 52-4*(i-3);
             	if (tiles[pom].unmatched)
                 	printf("kliknuto na %i\n",pom);
-                else
+                else{
                 	printf("kliknuto na %i\n",pom-25-2*(i-3));
+                	pom=pom-25-2*(i-3)
+                }
             }
 
-            else if(i==3){
-            	int pom = 63-(j-3);
+            else{
+            	pom = 63-2*(i-3)-(j-3);
             	if (tiles[pom].unmatched)
                 	printf("kliknuto na %i\n",pom);
                 else{
-                	pom = pom -9;
+                	pom = pom -9-2*(i-3);
                 	if (tiles[pom].unmatched)
                 		printf("kliknuto na %i\n",pom);
-                	else
-                		printf("kliknuto na %i\n",pom-25);
+                	else{
+                		pom=pom-25-2*(i-3);
+                		printf("kliknuto na %i\n",pom-25-2*(i-3));
+                	}
                 }
+            }
+
+            if(selected){
+            	if(pom==indexOfSelected){
+            		selected=0;
+            	}
+            	else if(tiles[pom].face==tiles[indexOfSelected].face){
+            		tiles[pom].unmatched=0;
+            		tiles[indexOfSelected].unmatched=0;
+            		selected=0;
+            	}
             }
             else{
-            	int pom = 61-(j-3);
-            	if (tiles[pom].unmatched)
-                	printf("kliknuto na %i\n",pom);
-                else{
-                	pom = pom -11;
-                	if (tiles[pom].unmatched)
-                		printf("kliknuto na %i\n",pom);
-                	else
-                		printf("kliknuto na %i\n",pom-27);
-                }
+            	selected=1;
+            	indexOfSelected=pom;
             }
+            glutPostRedisplay();
 	}
 }
 
