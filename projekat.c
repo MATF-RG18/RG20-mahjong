@@ -7,7 +7,7 @@
 #define NUM_OF_FACES 14
 typedef struct{
 	float x,y,z;
-	int visible,unmatched;
+	int unmatched;
 	float r,g,b;
 	int face;
 }Tile;
@@ -122,7 +122,6 @@ void initialise(){
 			tiles[i].x=i*1.1;
 			tiles[i].y=0;
 			tiles[i].z=0;
-			tiles[i].visible=1;
 			tiles[i].r=1;
 			tiles[i].g=0;
 			tiles[i].b=0;
@@ -133,10 +132,6 @@ void initialise(){
 			tiles[i].x=((i-8)%6)*1.1+1.1;
 			tiles[i].y=0;
 			tiles[i].z=1.1*((i-8)/6)+1.1;
-			if((i-8)<6 || (i-8)>28 || (i-8)%6==0 || (i-8)%6==5)
-				tiles[i].visible=1;
-			else
-				tiles[i].visible=0;
 			tiles[i].r=0;
 			tiles[i].g=1;
 			tiles[i].b=0;
@@ -145,10 +140,6 @@ void initialise(){
 			tiles[i].x=((i-44)%4)*1.1+2.2;
 			tiles[i].y=1;
 			tiles[i].z=1.1*((i-44)/4)+2.2;
-			if((i-44)<4 || (i-44)>=12 || (i-44)%4==0 || (i-44)%4==3)
-				tiles[i].visible=1;
-			else
-				tiles[i].visible=0;
 			tiles[i].r=0;
 			tiles[i].g=0;
 			tiles[i].b=1;
@@ -157,7 +148,6 @@ void initialise(){
 			tiles[i].x=((i-60)%2)*1.1+3.3;
 			tiles[i].y=2;
 			tiles[i].z=1.1*((i-60)/2)+3.3;
-			tiles[i].visible=1;
 			tiles[i].r=0.5;
 			tiles[i].g=0.5;
 			tiles[i].b=0.5;
@@ -167,7 +157,6 @@ void initialise(){
 			tiles[i].x=(i-64)*1.1;
 			tiles[i].y=0;
 			tiles[i].z=7.7;
-			tiles[i].visible=1;
 			tiles[i].r=1;
 			tiles[i].g=0;
 			tiles[i].b=0;          
