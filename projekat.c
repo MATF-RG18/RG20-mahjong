@@ -17,6 +17,7 @@ int* values;
 int* indices;
 void initialise();
 void shuffle(int *array, size_t n);
+int check_availability(int index);
 
 
 static void on_click(int button, int state,int x, int y);
@@ -32,6 +33,7 @@ int indexOfSelected=0;
 
 /******************************* 
 		OSLOBODI MEMORIJU
+
 
 *******************************/
 
@@ -255,7 +257,7 @@ static void on_click(int button, int state,int x, int y){
                 	printf("kliknuto na %i\n",pom);
                 else{
                 	printf("kliknuto na %i\n",pom-25-2*(i-3));
-                	pom=pom-25-2*(i-3)
+                	pom=pom-25-2*(i-3);
                 }
             }
 
@@ -273,22 +275,25 @@ static void on_click(int button, int state,int x, int y){
                 	}
                 }
             }
+            if(check_availability(pom)){
 
-            if(selected){
-            	if(pom==indexOfSelected){
-            		selected=0;
+            	if(selected){
+            		if(pom==indexOfSelected){
+            			selected=0;
+            		}
+            		else if(tiles[pom].face==tiles[indexOfSelected].face){
+            			tiles[pom].unmatched=0;
+            			tiles[indexOfSelected].unmatched=0;
+            			selected=0;
+            		}
             	}
-            	else if(tiles[pom].face==tiles[indexOfSelected].face){
-            		tiles[pom].unmatched=0;
-            		tiles[indexOfSelected].unmatched=0;
-            		selected=0;
+            	else{
+            		selected=1;
+            		indexOfSelected=pom;
             	}
-            }
-            else{
-            	selected=1;
-            	indexOfSelected=pom;
-            }
-            glutPostRedisplay();
+            	glutPostRedisplay();
+        	}
+            
 	}
 }
 
@@ -341,6 +346,8 @@ static void on_display(void)
     
     
     
+
+
     int i;
     for(i=0;i<numOfTiles;i++){
         if(tiles[i].unmatched){
@@ -362,4 +369,22 @@ static void on_display(void)
         }
     }
     glutSwapBuffers();
+}
+
+
+int check_availability(int index){
+	if(index>54 && index<64)
+		return 1;
+	if(index>36 && index<49)
+		return 1;
+	if(index==51 || index==52)
+		return 1;
+	if(index>7 && index<15)
+		return 1;
+	if(index>18 && index<33 && ((index-19)%6==0 || (index-19)%6==1))
+		return 1;
+	if(index==0 || index==7 || index==71 || index==64)
+		return 1;
+	return (tiles[index-1].unmatched==0 || tiles[index+1].unmatched==0);
+
 }
