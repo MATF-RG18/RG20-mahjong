@@ -1,10 +1,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <assert.h>
 #include <GL/glut.h>
 
 #define numOfTiles 72
 #define NUM_OF_FACES 14
+
+#define FILENAME0 "door.bmp"
+#define FILENAME1 "wall.bmp"
+
+static GLuint names[2];
+
+
 typedef struct{
 	float x,y,z;
 	int unmatched;
@@ -12,6 +20,33 @@ typedef struct{
 	int face;
 }Tile;
 
+typedef struct {
+  unsigned short type;
+  unsigned int size;
+  unsigned short reserved1;
+  unsigned short reserved2;
+  unsigned int offsetbits;
+} BITMAPFILEHEADER;
+
+
+typedef struct {
+  unsigned int size;
+  unsigned int width;
+  unsigned int height;
+  unsigned short planes;
+  unsigned short bitcount;
+  unsigned int compression;
+  unsigned int sizeimage;
+  int xpelspermeter;
+  int ypelspermeter;
+  unsigned int colorsused;
+  unsigned int colorsimportant;
+} BITMAPINFOHEADER;
+
+typedef struct Image {
+  int width, height;
+  char *pixels;
+} Image;
 
 int* values;
 int* indices;
@@ -32,6 +67,12 @@ static void on_timer(int value);
 static void on_display(void);
 
 Tile* tiles;
+Image* image;
+
+Image *image_init(int width, int height);
+void image_done(Image *image);
+void image_read(Image *image, char *filename);
+
 
 int selected=0;
 int indexOfSelected=0;
@@ -104,6 +145,49 @@ void shuffle(int *array, int n){
 }
 
 void initialise(){
+    
+        glEnable(GL_TEXTURE_2D);
+        glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
+        image = image_init(0, 0);
+
+    /* Kreira se prva tekstura. */
+    image_read(image, FILENAME0);
+
+    /* Generisu se identifikatori tekstura. */
+    glGenTextures(2, names);
+
+    glBindTexture(GL_TEXTURE_2D, names[0]);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+
+    /* Kreira se druga tekstura. */
+    image_read(image, FILENAME1);
+
+    glBindTexture(GL_TEXTURE_2D, names[1]);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+
+    /* Iskljucujemo aktivnu teksturu */
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    /* Unistava se objekat za citanje tekstura iz fajla. */
+    image_done(image);
 	int i,j;
 	for(i=0;i<NUM_OF_FACES;i++){
 		if(i<7)
@@ -185,6 +269,8 @@ static void on_keyboard(unsigned char key, int x, int y)
 {
     switch (key) {
     case 27:
+        if(tiles!=NULL)
+            free(tiles);
         exit(0);
         break;
 
@@ -363,7 +449,13 @@ static void on_display(void)
     int i;
     for(i=0;i<numOfTiles;i++){
         if(tiles[i].unmatched){
-        	glPushMatrix();
+            
+            glBindTexture(GL_TEXTURE_2D, names[0]);
+            glPushMatrix();
+                glTexCoord2f(tiles[i].x,tiles[i].z);
+                glTexCoord2f(tiles[i].x+1,tiles[i].z);
+                glTexCoord2f(tiles[i].x+1,tiles[i].z+2);
+                glTexCoord2f(tiles[i].x,tiles[i].z+2);
             	glScalef(1,0.3,2);
             	glTranslatef(tiles[i].x,tiles[i].y,tiles[i].z);
             	/*glColor3f(tiles[i].r,tiles[i].g,tiles[i].b);
@@ -380,6 +472,7 @@ static void on_display(void)
         	glPopMatrix();
         }
     }
+    glBindTexture(GL_TEXTURE_2D,0);
     glutSwapBuffers();
 }
 
@@ -396,3 +489,98 @@ int check_availability(int index){
 	return (tiles[index-1].unmatched==0 || tiles[index+1].unmatched==0);
 
 }
+
+
+
+Image *image_init(int width, int height) {
+
+  Image *image;
+
+  assert(width >= 0 && height >= 0);
+
+  image = (Image *) malloc(sizeof(Image));
+  assert(image != NULL);
+
+  image->width = width;
+  image->height = height;
+  if (width == 0 || height == 0)
+    image->pixels = NULL;
+  else {
+    image->pixels = (char *)malloc(3 * width * height * sizeof(char));
+    assert(image->pixels != NULL);
+  }
+  return image;
+}
+
+void image_done(Image *image) {
+  free(image->pixels);
+  free(image);
+}
+
+void image_read(Image *image, char *filename) {
+
+  FILE *file;
+  BITMAPFILEHEADER bfh;
+  BITMAPINFOHEADER bih;
+  unsigned int i;
+  unsigned char r, g, b, a;
+
+  free(image->pixels);
+  image->pixels = NULL;
+
+  assert((file = fopen(filename, "rb")) != NULL);
+
+  fread(&bfh.type, 2, 1, file);
+  fread(&bfh.size, 4, 1, file);
+  fread(&bfh.reserved1, 2, 1, file);
+  fread(&bfh.reserved2, 2, 1, file);
+  fread(&bfh.offsetbits, 4, 1, file);
+
+  fread(&bih.size, 4, 1, file);
+  fread(&bih.width, 4, 1, file);
+  fread(&bih.height, 4, 1, file);
+  fread(&bih.planes, 2, 1, file);
+  fread(&bih.bitcount, 2, 1, file);
+  fread(&bih.compression, 4, 1, file);
+  fread(&bih.sizeimage, 4, 1, file);
+  fread(&bih.xpelspermeter, 4, 1, file);
+  fread(&bih.ypelspermeter, 4, 1, file);
+  fread(&bih.colorsused, 4, 1, file);
+  fread(&bih.colorsimportant, 4, 1, file);
+  image->width = bih.width;
+  image->height = bih.height;
+  if (bih.bitcount == 24)
+    image->pixels = (char *)malloc(3 * bih.width * bih.height * sizeof(char));
+  else if (bih.bitcount == 32)
+    image->pixels = (char *)malloc(4 * bih.width * bih.height * sizeof(char));
+  else {
+    fprintf(stderr, "image_read(): Podrzane su samo slike koje po pikselu cuvaju 24 ili 32 bita podataka.\n");
+    exit(1);
+  }
+  assert(image->pixels != NULL);
+  if (bih.bitcount == 24)
+    for (i = 0; i < bih.width * bih.height; i++) {
+      fread(&b, sizeof(char), 1, file);
+      fread(&g, sizeof(char), 1, file);
+      fread(&r, sizeof(char), 1, file);
+
+      image->pixels[3 * i] = r;
+      image->pixels[3 * i + 1] = g;
+      image->pixels[3 * i + 2] = b;
+    }
+  else if (bih.bitcount == 32)
+    for (i = 0; i < bih.width * bih.height; i++) {
+      fread(&b, sizeof(char), 1, file);
+      fread(&g, sizeof(char), 1, file);
+      fread(&r, sizeof(char), 1, file);
+      fread(&a, sizeof(char), 1, file);
+
+      image->pixels[4 * i] = r;
+      image->pixels[4 * i + 1] = g;
+      image->pixels[4 * i + 2] = b;
+      image->pixels[4 * i + 3] = a;
+    }
+
+  fclose(file);
+}
+
