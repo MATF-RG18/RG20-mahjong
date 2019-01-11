@@ -73,6 +73,8 @@ Image *image_init(int width, int height);
 void image_done(Image *image);
 void image_read(Image *image, char *filename);
 
+void glutTexturedSolidCube(GLdouble size, int texture);
+static void drawBox(GLfloat size, GLenum type, int texture);
 
 int selected=0;
 int indexOfSelected=0;
@@ -83,8 +85,7 @@ int indexOfSelected=0;
 
 *******************************/
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv){
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 
@@ -146,9 +147,9 @@ void shuffle(int *array, int n){
 
 void initialise(){
     
-        glEnable(GL_TEXTURE_2D);
-        glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
-        image = image_init(0, 0);
+    glEnable(GL_TEXTURE_2D);
+    glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
+    image = image_init(0, 0);
 
     /* Kreira se prva tekstura. */
     image_read(image, FILENAME0);
@@ -179,16 +180,14 @@ void initialise(){
                     GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-                 image->width, image->height, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,image->width, image->height, 0,
                  GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
 
     /* Iskljucujemo aktivnu teksturu */
     glBindTexture(GL_TEXTURE_2D, 0);
 
     /* Unistava se objekat za citanje tekstura iz fajla. */
-    image_done(image);
-	int i,j;
+    	int i,j;
 	for(i=0;i<NUM_OF_FACES;i++){
 		if(i<7)
 			values[i]=4;
@@ -262,11 +261,9 @@ void initialise(){
 	
             
         }
-       
 }
 
-static void on_keyboard(unsigned char key, int x, int y)
-{
+static void on_keyboard(unsigned char key, int x, int y){
     switch (key) {
     case 27:
         if(tiles!=NULL)
@@ -322,7 +319,7 @@ static void on_click(int button, int state,int x, int y){
             }
 
             else if(i==5){
-            	pom = 47-j;
+            	pom = 49-j;
             	if (tiles[pom].unmatched)
                 	printf("kliknuto na %i\n",pom);
                 else{
@@ -337,7 +334,7 @@ static void on_click(int button, int state,int x, int y){
                 	printf("kliknuto na %i\n",pom);
                 else{
                 //	printf("kliknuto na %i\n",pom-25-3*(i-3));
-                	pom=pom-25-3*(i-3);
+                	pom=pom-24-3*(i-3);
                 }
             }
 
@@ -388,23 +385,18 @@ static void on_click(int button, int state,int x, int y){
 	}
 }
 
-
-
-static void on_timer(int value)
-{
+static void on_timer(int value){
     
 }
 
-static void on_reshape(int width, int height)
-{
+static void on_reshape(int width, int height){
     glViewport(0, 0, width, height);
    glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(65, (float) width / height, 1, 1500);
 }
 
-static void on_display(void)
-{
+static void on_display(void){
      GLfloat light_ambient[] = { 0.6, 0.6, 0.6, 1 };
     GLfloat light_diffuse[] = { 0.7, 0.7, 0.7, 1 };
     GLfloat light_specular[] = { 0.6, 0.6, 0.6, 1 };
@@ -416,6 +408,8 @@ static void on_display(void)
     
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
+    
+    
    
     glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
@@ -438,7 +432,7 @@ static void on_display(void)
     
     
 
-    if(selected){
+    if(selected && tiles[indexOfSelected].unmatched){
     	glPushMatrix();
     		glScalef(1,0.3,2);
     		glTranslatef(tiles[indexOfSelected].x,tiles[indexOfSelected].y+0.1,tiles[indexOfSelected].z);
@@ -449,14 +443,10 @@ static void on_display(void)
     int i;
     for(i=0;i<numOfTiles;i++){
         if(tiles[i].unmatched){
-            
-            glBindTexture(GL_TEXTURE_2D, names[0]);
+                
             glPushMatrix();
-                glTexCoord2f(tiles[i].x,tiles[i].z);
-                glTexCoord2f(tiles[i].x+1,tiles[i].z);
-                glTexCoord2f(tiles[i].x+1,tiles[i].z+2);
-                glTexCoord2f(tiles[i].x,tiles[i].z+2);
-            	glScalef(1,0.3,2);
+                
+                glScalef(1,0.3,2);
             	glTranslatef(tiles[i].x,tiles[i].y,tiles[i].z);
             	/*glColor3f(tiles[i].r,tiles[i].g,tiles[i].b);
                 glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs);
@@ -467,18 +457,22 @@ static void on_display(void)
                 diffuse_coeffs[1] = 1;
 		
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
-                glutSolidCube(1);
+                glutTexturedSolidCube(1,1);
 
         	glPopMatrix();
         }
     }
-    glBindTexture(GL_TEXTURE_2D,0);
+
+                    glBindTexture(GL_TEXTURE_2D,0);
+                   // image_done(image);
+
+
     glutSwapBuffers();
 }
 
-
 int check_availability(int index){
-	if(index>59 && index<64)
+    printf("%d\n",index);
+    	if(index>59 && index<64)
 		return 1;
 	if(index>43 && index<60 && ((index-44)%4==0 || (index-44)%4==3))
 		return 1;
@@ -582,5 +576,85 @@ void image_read(Image *image, char *filename) {
     }
 
   fclose(file);
+}
+
+void glutTexturedSolidCube(GLdouble size, int texture){
+  drawBox(size, GL_QUADS, texture);
+}
+
+
+static void drawBox(GLfloat size, GLenum type, int texture){ 
+  static GLfloat n[6][3] =
+  { 
+    {-1.0, 0.0, 0.0},
+    {0.0, 1.0, 0.0},
+    {1.0, 0.0, 0.0},
+    {0.0, -1.0, 0.0},
+    {0.0, 0.0, 1.0},
+    {0.0, 0.0, -1.0}
+  };
+  static GLint faces[6][4] =
+  { 
+    {0, 1, 2, 3},
+    {3, 2, 6, 7},
+    {7, 6, 5, 4},
+    {4, 5, 1, 0},
+    {5, 6, 2, 1},
+    {7, 4, 0, 3}
+  };
+  GLfloat v[8][3];
+  GLint i;
+  
+  v[0][0] = v[1][0] = v[2][0] = v[3][0] = -size / 2;
+  v[4][0] = v[5][0] = v[6][0] = v[7][0] = size / 2;
+  v[0][1] = v[1][1] = v[4][1] = v[5][1] = -size / 2;
+  v[2][1] = v[3][1] = v[6][1] = v[7][1] = size / 2;
+  v[0][2] = v[3][2] = v[4][2] = v[7][2] = -size / 2;
+  v[1][2] = v[2][2] = v[5][2] = v[6][2] = size / 2;
+
+  
+    
+  for (i = 5; i >= 0; i--) {
+    if(i==1){
+        glBindTexture(GL_TEXTURE_2D, names[texture]); // Here we use 'texture' argument to specify which texture we want
+  
+    glBegin(type);
+    glNormal3fv(&n[i][0]); //The only thing that is different from glutSolid cube is that we add glTexCoord function call while drawing vertices
+            glTexCoord2f(0, 0);
+    glVertex3fv(&v[faces[i][0]][0]);
+            glTexCoord2f(1, 0);
+    glVertex3fv(&v[faces[i][1]][0]);
+            glTexCoord2f(1, 1);
+    glVertex3fv(&v[faces[i][2]][0]);
+            glTexCoord2f(0, 1);
+    glVertex3fv(&v[faces[i][3]][0]);
+    glEnd();
+  
+  
+    glBindTexture(GL_TEXTURE_2D, 0);
+  
+    }
+      
+
+    else{
+        glBindTexture(GL_TEXTURE_2D, names[0]); // Here we use 'texture' argument to specify which texture we want
+  
+    glBegin(type);
+    glNormal3fv(&n[i][0]); //The only thing that is different from glutSolid cube is that we add glTexCoord function call while drawing vertices
+            glTexCoord2f(0, 0);
+    glVertex3fv(&v[faces[i][0]][0]);
+            glTexCoord2f(1, 0);
+    glVertex3fv(&v[faces[i][1]][0]);
+            glTexCoord2f(1, 1);
+    glVertex3fv(&v[faces[i][2]][0]);
+            glTexCoord2f(0, 1);
+    glVertex3fv(&v[faces[i][3]][0]);
+    glEnd();
+  
+  
+    glBindTexture(GL_TEXTURE_2D, 0);
+    }
+  } 
+// Disable texturing
 }
 
