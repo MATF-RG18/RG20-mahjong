@@ -7,10 +7,10 @@
 #define numOfTiles 72
 #define NUM_OF_FACES 14
 
-#define FILENAME0 "door.bmp"
-#define FILENAME1 "wall.bmp"
 
-static GLuint names[2];
+
+
+static GLuint names[15];
 
 
 typedef struct{
@@ -72,6 +72,8 @@ Image* image;
 Image *image_init(int width, int height);
 void image_done(Image *image);
 void image_read(Image *image, char *filename);
+void generateTexture(int i);
+
 
 void glutTexturedSolidCube(GLdouble size, int texture);
 static void drawBox(GLfloat size, GLenum type, int texture);
@@ -149,40 +151,12 @@ void initialise(){
     
     glEnable(GL_TEXTURE_2D);
     glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
-    image = image_init(0, 0);
-
-    /* Kreira se prva tekstura. */
-    image_read(image, FILENAME0);
-
-    /* Generisu se identifikatori tekstura. */
-    glGenTextures(2, names);
-
-    glBindTexture(GL_TEXTURE_2D, names[0]);
-    glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-                 image->width, image->height, 0,
-                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+    glGenTextures(15, names);
 
     /* Kreira se druga tekstura. */
-    image_read(image, FILENAME1);
-
-    glBindTexture(GL_TEXTURE_2D, names[1]);
-    glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,image->width, image->height, 0,
-                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
-
+    for(int i=0;i<15;i++)
+        generateTexture(i);
+    
     /* Iskljucujemo aktivnu teksturu */
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -457,7 +431,7 @@ static void on_display(void){
                 diffuse_coeffs[1] = 1;
 		
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
-                glutTexturedSolidCube(1,1);
+                glutTexturedSolidCube(1,tiles[i].face);
 
         	glPopMatrix();
         }
@@ -583,6 +557,34 @@ void glutTexturedSolidCube(GLdouble size, int texture){
 }
 
 
+void generateTexture(int i){
+    image = image_init(0, 0);
+
+    char * s =malloc(7*sizeof(char));
+    sprintf(s,"%d.bmp",i);
+    printf("%s\n",s);
+    /* Kreira se prva tekstura. */
+    image_read(image, s);
+
+    /* Generisu se identifikatori tekstura. */
+    
+    glBindTexture(GL_TEXTURE_2D, names[i]);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+
+    
+    
+}
+
 static void drawBox(GLfloat size, GLenum type, int texture){ 
   static GLfloat n[6][3] =
   { 
@@ -637,22 +639,22 @@ static void drawBox(GLfloat size, GLenum type, int texture){
       
 
     else{
-        glBindTexture(GL_TEXTURE_2D, names[0]); // Here we use 'texture' argument to specify which texture we want
+        glBindTexture(GL_TEXTURE_2D, names[14]); // Here we use 'texture' argument to specify which texture we want
   
-    glBegin(type);
-    glNormal3fv(&n[i][0]); //The only thing that is different from glutSolid cube is that we add glTexCoord function call while drawing vertices
+        glBegin(type);
+        glNormal3fv(&n[i][0]); //The only thing that is different from glutSolid cube is that we add glTexCoord function call while drawing vertices
             glTexCoord2f(0, 0);
-    glVertex3fv(&v[faces[i][0]][0]);
+        glVertex3fv(&v[faces[i][0]][0]);
             glTexCoord2f(1, 0);
-    glVertex3fv(&v[faces[i][1]][0]);
+        glVertex3fv(&v[faces[i][1]][0]);
             glTexCoord2f(1, 1);
-    glVertex3fv(&v[faces[i][2]][0]);
+        glVertex3fv(&v[faces[i][2]][0]);
             glTexCoord2f(0, 1);
-    glVertex3fv(&v[faces[i][3]][0]);
-    glEnd();
+        glVertex3fv(&v[faces[i][3]][0]);
+        glEnd();
   
   
-    glBindTexture(GL_TEXTURE_2D, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
   } 
 // Disable texturing
