@@ -7,7 +7,25 @@
 #define numOfTiles 72
 #define NUM_OF_FACES 14
 
+#define TIMER_ID1 1
+#define TIMER_ID2 2
+#define TIMER_INTERVAL 20
 
+
+
+
+int winningAnimation=0;
+int gameOver=0;
+
+
+int animation1=0;
+int animation_parameter;
+int matched1,matched2;
+
+int animation2=0;
+int animation_parameter2=0;
+
+int remaining=72;
 
 
 static GLuint names[15];
@@ -52,7 +70,10 @@ int* values;
 int* indices;
 void initialise();
 void shuffle(int *array, int n);
+
 int check_availability(int index);
+int check_game_over();
+
 void printFaces();
 void printArray(int * array,int n){
 	for(int i=0;i<n;i++)
@@ -63,7 +84,7 @@ void printArray(int * array,int n){
 static void on_click(int button, int state,int x, int y);
 static void on_keyboard(unsigned char key, int x, int y);
 static void on_reshape(int width, int height);
-static void on_timer(int value);
+static void on_timer(int id);
 static void on_display(void);
 
 Tile* tiles;
@@ -113,7 +134,7 @@ int main(int argc, char **argv){
  	}
 
     initialise();
-    printFaces();
+   // printFaces();
     glutKeyboardFunc(on_keyboard);
     glutReshapeFunc(on_reshape);
     glutMouseFunc(on_click);
@@ -152,7 +173,7 @@ void initialise(){
     glEnable(GL_TEXTURE_2D);
     glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
     glGenTextures(15, names);
-
+    animation_parameter=0;
     /* Kreira se druga tekstura. */
     for(int i=0;i<15;i++)
         generateTexture(i);
@@ -248,6 +269,10 @@ static void on_keyboard(unsigned char key, int x, int y){
     }
 }
 
+
+
+
+
 static void on_click(int button, int state,int x, int y){
 	if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN && x>480 && x<820 && y>30 && y<680){
             int i,j;
@@ -284,60 +309,38 @@ static void on_click(int button, int state,int x, int y){
             }
             else if(i==2){
             	pom = 61-j;
-            	if (tiles[pom].unmatched)
-                	printf("kliknuto na %i\n",pom);
-                else{
+            	if (tiles[pom].unmatched==0)
                 //	printf("kliknuto na %i\n",pom-23);
                 	pom=pom-23;
-                }
             }
 
             else if(i==5){
             	pom = 49-j;
-            	if (tiles[pom].unmatched)
-                	printf("kliknuto na %i\n",pom);
-                else{
-               // 	printf("kliknuto na %i\n",pom-29);
+            	if (tiles[pom].unmatched==0)
                 	pom=pom-29;
-                }
             }
 
             else if(j==2){
             	pom = 55-4*(i-3);
-            	if (tiles[pom].unmatched)
-                	printf("kliknuto na %i\n",pom);
-                else{
-                //	printf("kliknuto na %i\n",pom-25-3*(i-3));
-                	pom=pom-24-3*(i-3);
-                }
+            	if (tiles[pom].unmatched==0)
+                	pom=pom-25-2*(i-3);    
             }
 
             else if(j==5){
             	pom = 52-4*(i-3);
-            	if (tiles[pom].unmatched)
-                	printf("kliknuto na %i\n",pom);
-                else{
-                //	printf("kliknuto na %i\n",pom-25-2*(i-3));
+            	if (tiles[pom].unmatched==0)
                 	pom=pom-25-2*(i-3);
-                }
             }
 
             else{
             	pom = 63-2*(i-3)-(j-3);
-            	if (tiles[pom].unmatched)
-                	printf("kliknuto na %i\n",pom);
-                else{
+            	if (tiles[pom].unmatched==0)
                 	pom = pom -9-2*(i-3);
-                	if (tiles[pom].unmatched)
-                		printf("kliknuto na %i\n",pom);
-                	else{
+                	if (tiles[pom].unmatched==0)
                 		pom=pom-25-2*(i-3);
-                	//	printf("kliknuto na %i\n",pom-25-2*(i-3));
-                	}
-                }
             }
-            if(check_availability(pom)){
-            	printf("dostupno %d\n",pom);
+            if(check_availability(pom) && tiles[pom].unmatched){
+            	//printf("dostupno %d\n",pom);
 
             	if(selected){
             		if(pom==indexOfSelected){
@@ -347,20 +350,66 @@ static void on_click(int button, int state,int x, int y){
             			tiles[pom].unmatched=0;
             			tiles[indexOfSelected].unmatched=0;
             			selected=0;
+                                if(remaining==2)
+                                    winningAnimation=1;
+                                else{
+                                    
+                                    remaining-=2;
+                                    matched1=pom;
+                                    matched2=indexOfSelected;
+                                    if(check_game_over()){
+                                        gameOver=1;
+                                    }
+                                    else{
+                                        animation1=1;
+                                        animation_parameter=0;
+                                        glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID1);
+                                    }
             		}
+                            
+                        }
+            		else
+                            selected=0;
             	}
             	else{
             		selected=1;
             		indexOfSelected=pom;
             	}
+                    
+                }
             	glutPostRedisplay();
         	}
             
-	}
 }
 
-static void on_timer(int value){
-    
+static void on_timer(int id){
+     if (TIMER_ID1 == id){
+        animation_parameter += 1;
+        if(animation_parameter>=20){
+                animation1=0;
+                animation2=1;
+                animation_parameter2=0;
+                glutTimerFunc(TIMER_INTERVAL,on_timer,TIMER_ID2);
+        }
+
+        glutPostRedisplay();
+
+        if (animation1) {
+            glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID1);
+        }
+    }
+    else if (TIMER_ID2 == id){
+        animation_parameter2 += 2;
+        if(animation_parameter>=180)
+                animation2=0;
+            
+
+        glutPostRedisplay();
+
+        if (animation2) {
+            glutTimerFunc(TIMER_INTERVAL, on_timer, TIMER_ID2);
+        }
+    }
 }
 
 static void on_reshape(int width, int height){
@@ -389,18 +438,18 @@ static void on_display(void){
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
     glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
 
-	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs);
+    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient_coeffs);
       
-      glMaterialfv(GL_FRONT, GL_SPECULAR, specular_coeffs);
-      glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, specular_coeffs);
+    glMaterialf(GL_FRONT, GL_SHININESS, shininess);
 
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-	GLfloat light_position[] = {5,15,6, 1 };
-	 glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    GLfloat light_position[] = {5,15,6, 1 };
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     gluLookAt(5,15,6, 5, 2.5, 7, 0, 0,1);
     
     
@@ -437,7 +486,57 @@ static void on_display(void){
         }
     }
 
-                    glBindTexture(GL_TEXTURE_2D,0);
+    if(animation1){
+
+            glPushMatrix();
+                
+                glScalef(1,0.3,2);
+            	glTranslatef(tiles[matched1].x+(-5-tiles[matched1].x)*animation_parameter/20,
+                             tiles[matched1].y+(4-tiles[matched1].y)*animation_parameter/20,
+                             tiles[matched1].z+(3.9-tiles[matched1].z)*animation_parameter/20);
+            	 diffuse_coeffs[1] = 1;
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
+                glutTexturedSolidCube(1,tiles[matched1].face);
+
+        	glPopMatrix();
+                
+            glPushMatrix();
+                
+                glScalef(1,0.3,2);
+            	glTranslatef(tiles[matched2].x+(12-tiles[matched2].x)*animation_parameter/20,
+                             tiles[matched2].y+(4-tiles[matched2].y)*animation_parameter/20,
+                             tiles[matched2].z+(4-tiles[matched2].z)*animation_parameter/20);
+            	 diffuse_coeffs[1] = 1;
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
+                glutTexturedSolidCube(1,tiles[matched2].face);
+
+        	glPopMatrix();
+        
+        }
+        if(animation2){
+            glPushMatrix();
+                
+                glScalef(1,0.3,2);
+            	glTranslatef(-0.4-4.6*cos(animation_parameter2),4,3+cos(90-animation_parameter2));
+            	 diffuse_coeffs[1] = 1;
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
+                glutTexturedSolidCube(1,tiles[matched1].face);
+
+        	glPopMatrix();
+                
+            glPushMatrix();
+                
+                glScalef(1,0.3,2);
+            	glTranslatef(7.4+4.6*cos(animation_parameter2),4,3+cos(90-animation_parameter2));
+            	 diffuse_coeffs[1] = 1;
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
+                glutTexturedSolidCube(1,tiles[matched2].face);
+
+        	glPopMatrix();
+        
+        }
+            
+        glBindTexture(GL_TEXTURE_2D,0);
                    // image_done(image);
 
 
@@ -445,7 +544,6 @@ static void on_display(void){
 }
 
 int check_availability(int index){
-    printf("%d\n",index);
     	if(index>59 && index<64)
 		return 1;
 	if(index>43 && index<60 && ((index-44)%4==0 || (index-44)%4==3))
@@ -458,7 +556,15 @@ int check_availability(int index){
 
 }
 
-
+int check_game_over(){
+    
+    for(int i=0;i<numOfTiles;i++)
+        for(int j=0;j<numOfTiles;j++)
+            if(i!=j && tiles[i].unmatched && tiles[j].unmatched && tiles[i].face==tiles[j].face)
+                return 0;
+        
+    return 1;
+}
 
 Image *image_init(int width, int height) {
 
@@ -556,7 +662,6 @@ void glutTexturedSolidCube(GLdouble size, int texture){
   drawBox(size, GL_QUADS, texture);
 }
 
-
 void generateTexture(int i){
     image = image_init(0, 0);
 
@@ -622,13 +727,13 @@ static void drawBox(GLfloat size, GLenum type, int texture){
   
     glBegin(type);
     glNormal3fv(&n[i][0]); //The only thing that is different from glutSolid cube is that we add glTexCoord function call while drawing vertices
-            glTexCoord2f(0, 0);
-    glVertex3fv(&v[faces[i][0]][0]);
             glTexCoord2f(1, 0);
-    glVertex3fv(&v[faces[i][1]][0]);
+    glVertex3fv(&v[faces[i][0]][0]);
             glTexCoord2f(1, 1);
-    glVertex3fv(&v[faces[i][2]][0]);
+    glVertex3fv(&v[faces[i][1]][0]);
             glTexCoord2f(0, 1);
+    glVertex3fv(&v[faces[i][2]][0]);
+            glTexCoord2f(0, 0);
     glVertex3fv(&v[faces[i][3]][0]);
     glEnd();
   
