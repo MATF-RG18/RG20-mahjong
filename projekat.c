@@ -10,7 +10,7 @@
 #define TIMER_ID1 1
 #define TIMER_ID2 2
 #define TIMER_INTERVAL 20
-
+#define PI 3.141592653
 
 
 
@@ -400,7 +400,7 @@ static void on_timer(int id){
     }
     else if (TIMER_ID2 == id){
         animation_parameter2 += 2;
-        if(animation_parameter>=180)
+        if(animation_parameter2>=180)
                 animation2=0;
             
 
@@ -517,7 +517,7 @@ static void on_display(void){
             glPushMatrix();
                 
                 glScalef(1,0.3,2);
-            	glTranslatef(-0.4-4.6*cos(animation_parameter2),4,3+cos(90-animation_parameter2));
+            	glTranslatef(-0.4-4.6*cos(2*animation_parameter2*PI/360),4,3-cos(2*(90-animation_parameter2)*PI/360));
             	 diffuse_coeffs[1] = 1;
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
                 glutTexturedSolidCube(1,tiles[matched1].face);
@@ -527,7 +527,7 @@ static void on_display(void){
             glPushMatrix();
                 
                 glScalef(1,0.3,2);
-            	glTranslatef(7.4+4.6*cos(animation_parameter2),4,3+cos(90-animation_parameter2));
+            	glTranslatef(7.4+4.6*cos(2*animation_parameter2*PI/360),4,3+cos(2*(90-animation_parameter2)*PI/360));
             	 diffuse_coeffs[1] = 1;
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse_coeffs);
                 glutTexturedSolidCube(1,tiles[matched2].face);
