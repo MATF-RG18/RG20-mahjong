@@ -27,6 +27,7 @@ int animation_parameter2=0;
 
 int remaining=72;
 
+int globalWidth,globalHeight;
 
 static GLuint names[15];
 
@@ -92,7 +93,7 @@ Image *image_init(int width, int height);
 void image_done(Image *image);
 void image_read(Image *image, char *filename);
 void generateTexture(int i);
-
+void textFunc(const char* text, double x, double y)
 
 void glutTexturedSolidCube(GLdouble size, int texture);
 static void drawBox(GLfloat size, GLenum type, int texture);
@@ -333,13 +334,15 @@ static void on_click(int button, int state,int x, int y){
                                 if(remaining==2)
                                 	//Start winning animation
                                     winningAnimation=1;
+
+                                    	textFunc("YOU LOST!", widthW/2 - 30, heightW - 50);
                                 else{
                                     
                                     remaining-=2;
                                     matched1=pom;
                                     matched2=indexOfSelected;
                                     if(check_game_over()){
-
+                                    	textFunc("YOU LOST!", widthW/2 - 30, heightW - 50);
                                         gameOver=1;
                                     }
                                     else{
@@ -401,6 +404,8 @@ static void on_reshape(int width, int height){
    glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(65, (float) width / height, 1, 1500);
+    globalWidth=width;
+    globalHeight=height;
 }
 
 static void on_display(void){
@@ -748,4 +753,29 @@ static void drawBox(GLfloat size, GLenum type, int texture){
 void printArray(int * array,int n){
 	for(int i=0;i<n;i++)
 		printf("%d \n",array[i] );
+}
+void textFunc(const char* text, double x, double y){
+    glPushMatrix(); /*function that displays text on viewport*/ 
+
+    glDisable(GL_LIGHTING); /*disable lighting */
+    glColor3f(0, 0, 0); /* set color of letters to be black*/
+
+    glMatrixMode(GL_PROJECTION); 
+    double matrix[16];
+    glGetDoublev(GL_PROJECTION_MATRIX, matrix);/*get current projection matrix*/
+    glLoadIdentity();
+    glOrtho(0, globalWidth, 0, globalHeight, -5, 5);/*set ortho*/
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glRasterPos2f(x,y); /*set raster position to be x and y that are parameters of function*/
+    
+    for(int i = 0; text[i]; i++){
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, (int)text[i]); /*print string that is parameter of function*/
+    }
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixd(matrix); /*load matrix*/
+    glMatrixMode(GL_MODELVIEW);
+    glEnable(GL_LIGHTING); /*enable lighting*/
+
+    glPopMatrix();
 }
