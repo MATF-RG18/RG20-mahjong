@@ -3,6 +3,7 @@
 #include <math.h>
 #include <assert.h>
 #include <GL/glut.h>
+#include <time.h>
 
 #define numOfTiles 72
 #define NUM_OF_FACES 14
@@ -144,6 +145,17 @@ int main(int argc, char **argv){
     return 0;
 }
 
+void restart(){
+    animation1=0;
+    animation2=0;
+    animation_parameter=0;
+    animation_parameter2=0;
+    for(int i=0;i<numOfTiles;i++){
+	tiles[i].unmatched=1;
+    }
+    remaining=72;
+}
+
 
 void printFaces(){
 	for(int i=0;i<numOfTiles;i++){
@@ -155,8 +167,9 @@ void printFaces(){
 void shuffle(int *array, int n){
     if (n > 1) {
         int i;
+        srand(time(NULL));
         for (i=0;i<n-1; i++){
-          srand((unsigned) i);
+          
           int j = i + rand()/(RAND_MAX/(n-i)+1);
           int t = array[j];
           array[j] = array[i];
@@ -249,7 +262,10 @@ static void on_keyboard(unsigned char key, int x, int y){
             free(tiles);
         exit(0);
         break;
-
+    case 'r':
+    case 'R':
+        restart();
+        glutPostRedisplay();
     }
 }
 
@@ -331,14 +347,13 @@ static void on_click(int button, int state,int x, int y){
             			tiles[pom].unmatched=0;
             			tiles[indexOfSelected].unmatched=0;
             			selected=0;
-                                printf("%d\n",remaining);
                                 if(remaining==2){
                                 	//Start winning animation
                                     winningAnimation=1;
                                     //printf("pobeda\n");
                                     //exit(0);
 
-                                    	textFunc("YOU LOST!", globalWidth/2 - 30, globalHeight - 50);
+                                    	
                                 }
                                 else{
                                     
@@ -346,9 +361,7 @@ static void on_click(int button, int state,int x, int y){
                                     matched1=pom;
                                     matched2=indexOfSelected;
                                     if(check_game_over()){
-                                    	textFunc("YOU LOST!", globalWidth/2 - 30, globalHeight - 50);
                                         gameOver=1;
-                                        printf("kraj\n");
                                         //exit(0);
                                     }
                                     else{
@@ -449,14 +462,13 @@ static void on_display(void){
     
     gluLookAt(5,15,6, 5, 2.5, 7, 0, 0,1);
     
-    
-    
 
     if(selected && tiles[indexOfSelected].unmatched){
     	//Drawing a wire cube over selected tile
     	glPushMatrix();
     		glScalef(1,0.3,2);
     		glTranslatef(tiles[indexOfSelected].x,tiles[indexOfSelected].y+0.1,tiles[indexOfSelected].z);
+                glLineWidth(3);
     		glutWireCube(1);
     	glPopMatrix();
     }
@@ -512,6 +524,14 @@ static void on_display(void){
                 glutTexturedSolidCube(1,tiles[matched2].face);
         	glPopMatrix();
         
+        }
+        if(winningAnimation){
+
+            textFunc("YOU WON!", globalWidth/2, globalHeight);
+        }
+        
+        if(gameOver){
+            textFunc("YOU LOST!\n PRESS R TO RESTART", globalWidth/2 , globalHeight);
         }
             
         glBindTexture(GL_TEXTURE_2D,0);
@@ -657,13 +677,14 @@ void generateTexture(int i){
     free(s);
     glBindTexture(GL_TEXTURE_2D, names[i]);
     glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+                    GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+                    GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D,
                     GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D,
                     GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
                  image->width, image->height, 0,
                  GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
@@ -761,7 +782,7 @@ void printArray(int * array,int n){
 		printf("%d \n",array[i] );
 }
 void textFunc(const char* text, double x, double y){
-    glPushMatrix(); /*function that displays text on viewport*/ 
+    glPushMatrix();
     //printf("%s\n",text);
     glDisable(GL_LIGHTING); /*disable lighting */
     glColor3f(0, 1, 0); /* set color of letters to be black*/
@@ -770,13 +791,13 @@ void textFunc(const char* text, double x, double y){
     double matrix[16];
     glGetDoublev(GL_PROJECTION_MATRIX, matrix);
     glLoadIdentity();
-    glOrtho(-15, 15, 0, 4, -15, 15);
+    glOrtho(0, globalWidth, 0, globalHeight, -5, 5);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glRasterPos2f(x,y); 
     
     for(int i = 0; text[i]; i++){
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, (int)text[i]); /*print string that is parameter of function*/
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, (int)text[i]); /*print string that is parameter of function*/
     }
     
     glMatrixMode(GL_PROJECTION);
