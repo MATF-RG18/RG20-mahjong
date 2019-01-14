@@ -93,7 +93,7 @@ Image *image_init(int width, int height);
 void image_done(Image *image);
 void image_read(Image *image, char *filename);
 void generateTexture(int i);
-void textFunc(const char* text, double x, double y)
+void textFunc(const char* text, double x, double y);
 
 void glutTexturedSolidCube(GLdouble size, int texture);
 static void drawBox(GLfloat size, GLenum type, int texture);
@@ -331,19 +331,25 @@ static void on_click(int button, int state,int x, int y){
             			tiles[pom].unmatched=0;
             			tiles[indexOfSelected].unmatched=0;
             			selected=0;
-                                if(remaining==2)
+                                printf("%d\n",remaining);
+                                if(remaining==2){
                                 	//Start winning animation
                                     winningAnimation=1;
+                                    //printf("pobeda\n");
+                                    //exit(0);
 
-                                    	textFunc("YOU LOST!", widthW/2 - 30, heightW - 50);
+                                    	textFunc("YOU LOST!", globalWidth/2 - 30, globalHeight - 50);
+                                }
                                 else{
                                     
                                     remaining-=2;
                                     matched1=pom;
                                     matched2=indexOfSelected;
                                     if(check_game_over()){
-                                    	textFunc("YOU LOST!", widthW/2 - 30, heightW - 50);
+                                    	textFunc("YOU LOST!", globalWidth/2 - 30, globalHeight - 50);
                                         gameOver=1;
+                                        printf("kraj\n");
+                                        //exit(0);
                                     }
                                     else{
                                         animation1=1;
@@ -532,11 +538,12 @@ int check_availability(int index){
 }
 
 int check_game_over(){
-    for(int i=0;i<numOfTiles;i++)
-        for(int j=0;j<numOfTiles;j++)
-            if(i!=j && tiles[i].unmatched && tiles[j].unmatched && tiles[i].face==tiles[j].face)
+    for(int i=0;i<numOfTiles;i++){
+        for(int j=i+1;j<numOfTiles;j++){
+            if(tiles[i].unmatched && tiles[j].unmatched  && check_availability(i) && check_availability(j) && tiles[i].face==tiles[j].face)
                 return 0;
-        
+        }
+    }
     return 1;
 }
 
@@ -646,7 +653,6 @@ void generateTexture(int i){
 
     char * s =malloc(7*sizeof(char));
     sprintf(s,"%d.bmp",i);
-    printf("%s\n",s);
     image_read(image, s);
     free(s);
     glBindTexture(GL_TEXTURE_2D, names[i]);
@@ -756,26 +762,27 @@ void printArray(int * array,int n){
 }
 void textFunc(const char* text, double x, double y){
     glPushMatrix(); /*function that displays text on viewport*/ 
-
+    //printf("%s\n",text);
     glDisable(GL_LIGHTING); /*disable lighting */
-    glColor3f(0, 0, 0); /* set color of letters to be black*/
-
+    glColor3f(0, 1, 0); /* set color of letters to be black*/
+    
     glMatrixMode(GL_PROJECTION); 
     double matrix[16];
-    glGetDoublev(GL_PROJECTION_MATRIX, matrix);/*get current projection matrix*/
+    glGetDoublev(GL_PROJECTION_MATRIX, matrix);
     glLoadIdentity();
-    glOrtho(0, globalWidth, 0, globalHeight, -5, 5);/*set ortho*/
+    glOrtho(-15, 15, 0, 4, -15, 15);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glRasterPos2f(x,y); /*set raster position to be x and y that are parameters of function*/
+    glRasterPos2f(x,y); 
     
     for(int i = 0; text[i]; i++){
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, (int)text[i]); /*print string that is parameter of function*/
     }
+    
     glMatrixMode(GL_PROJECTION);
-    glLoadMatrixd(matrix); /*load matrix*/
+    glLoadMatrixd(matrix); 
     glMatrixMode(GL_MODELVIEW);
-    glEnable(GL_LIGHTING); /*enable lighting*/
+    glEnable(GL_LIGHTING); 
 
     glPopMatrix();
 }
