@@ -30,7 +30,7 @@ int remaining=72;
 
 int globalWidth,globalHeight;
 
-static GLuint names[15];
+static GLuint names[16];
 
 
 typedef struct{
@@ -182,11 +182,11 @@ void initialise(){
     //Texture enabling 
     glEnable(GL_TEXTURE_2D);
     glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
-    glGenTextures(15, names);
+    glGenTextures(16, names);
    
     animation_parameter=0;
     // Importing textures
-    for(int i=0;i<15;i++)
+    for(int i=0;i<16;i++)
         generateTexture(i);
     
     //Removing active texture
@@ -460,9 +460,37 @@ static void on_display(void){
     GLfloat light_position[] = {5,15,6, 1 };
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     
-    gluLookAt(5,15,6, 5, 2.5, 7, 0, 0,1);
+   
     
+    glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0, globalWidth, 0 , globalHeight, -1, 1);
+    glBindTexture(GL_TEXTURE_2D, names[15]); /*Drawing background*/
+    glBegin(GL_QUADS);
 
+        glTexCoord2f(0, 0);
+        glVertex2i(0, 0);
+
+        glTexCoord2f(1, 0);
+        glVertex2i(globalWidth, 0);
+
+        glTexCoord2f(1, 1);
+        glVertex2i(globalWidth, globalHeight);
+
+        glTexCoord2f(0, 1);
+        glVertex2i(0,globalHeight);
+	glEnd();
+	glBindTexture(GL_TEXTURE_2D, 0); /*Turning off current texture*/
+	glEnable(GL_DEPTH_TEST); /*Re enabling depth testing*/
+	glClear(GL_DEPTH_BUFFER_BIT); /*Clearing depth buffer*/
+	glLoadIdentity();
+    gluPerspective(65, (float) globalWidth / globalHeight, 1, 1500); /*Setting perspective again*/
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
+ gluLookAt(5,15,6, 5, 2.5, 7, 0, 0,1);
     if(selected && tiles[indexOfSelected].unmatched){
     	//Drawing a wire cube over selected tile
     	glPushMatrix();
@@ -526,12 +554,12 @@ static void on_display(void){
         
         }
         if(winningAnimation){
-
-            textFunc("YOU WON!", globalWidth/2, globalHeight);
+            //printf("win\n");
+            textFunc("YOU WON!", globalWidth/2, globalHeight/2);
         }
         
         if(gameOver){
-            textFunc("YOU LOST!\n PRESS R TO RESTART", globalWidth/2 , globalHeight);
+            textFunc("YOU LOST!\n PRESS R TO RESTART", globalWidth/2 , globalHeight/2);
         }
             
         glBindTexture(GL_TEXTURE_2D,0);
@@ -671,8 +699,8 @@ void glutTexturedSolidCube(GLdouble size, int texture){
 void generateTexture(int i){
     image = image_init(0, 0);
 
-    char * s =malloc(7*sizeof(char));
-    sprintf(s,"%d.bmp",i);
+    char * s =malloc(15*sizeof(char));
+    sprintf(s,"textures/%d.bmp",i);
     image_read(image, s);
     free(s);
     glBindTexture(GL_TEXTURE_2D, names[i]);
